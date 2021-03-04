@@ -1,0 +1,83 @@
+//Necessário instalar o Python na máquina.
+
+import socket 
+from datetime import datetime //para usar implementar data e hora
+
+socketTCP = socket.socket(socket.AF_INET, socket.SOCK_STREAM); //AF_INET identifica a pilha de protocolos TCPIP na versão IPV4
+//se quiser usar o IPV6 coloca AF_INET6. No segundo parametro informa o socket que vou abrir, especificando o tipo de serviço para usar na camada de transporte(TCP ou UDP), neste caso o TCP
+
+print("criou o socket") //aqui printa para dizer que o socket está funcionando
+
+//Se especificar a porta significa que é um Socket servidor(precisa ter um ip e uma porta definidos), se não especificar, o próprio sistema operacional irá atribuir estes parâmetros, mas de maneira aleatória.
+//socket TCP é um objeto então contém métodos, e o bind é um deles.
+
+socketTCP.bind(('', 8080)) // socketTCP.bind(('IP', porta)). No campo IP, especifíco  o endereço para o qual quero atribuir o socket
+//Se o campo IP estiver com uma String vazia, significa que não fica restrito apenas a um endereço IP, o socket fica vinculado a todas as interfaces de rede na porta 8080
+
+print("vinculou a porta 8080") //a porta é o que identifica o processo
+
+//quando vinculamos o socket com IP e porta, está preparando este socket para ser operacional, então precisa estar disponível para escutar novas conexões, faz-se isto com o método listen
+socketTCP.listen()
+print("escutando novas conexões")
+
+//o que preciso fazer para que a conexão seja aceita? Usa o método accept, este fica bloquado até que aja um cliente para se conectar com o servidor. No momento que o cliente abre uma conexão, o servvidor cria um novo socket especificamente para esta nova conexão
+
+ while True:
+    print("aguardando nova conexão")
+    novoSocketDaConexao, enderecoDoCliente = socketTCP.accept() //vai retornar o socket e o endereço do cliente, este novo socket da conexão é atrelado ao socket que o cliente acabou de abir. Vejamos
+    print("nova conexão do cliente: ", enderecoDoCliente) //no momento desa conexão, o socket está travado
+
+    // Para testar posso usar o Telnet para verificar, abrindo uma conexão:
+    No terminal, digita: telnet IP PORTA (passa qualquer um dos endereços IP que estão atrelados a placa de rede da máquina e a porta)
+    //com este novo socket criado, é possível enviar e receber bytes, mas como faz? Chama o método recv:
+
+    //recv(abreviação de receive): método que lê os bytes que chegam na conexão TCP
+    data = novoSocketDaConexao.recv(1) //no parâmetro especifica limite da qntd de bytes quero ler 
+    //a variável data é do tipo bytes e armazena o retorno do método. Cada caractere é um byte
+    //o método recv tem que saber o momento para parar de ler e processar o dado.
+    //o método retorna bytes, então tem que ser convertido em String caso queira interpretar a mensagem recebida:
+    //aqui decodifica e exibe sem parar a mensagem:
+
+    linha = ""
+    //quantos clientes este socket consegue suportar? Só 1. Pois este socket espera apenas uma conexão, que foi definido no método accept
+     while True: // aqui 
+        data = novoSocketDaConexao.recv(10)
+        linha += data.decode("UTF-8")
+
+    //para dar print somente se tiver uma quebra de linha:
+        if linha.endswith("\r\n"); //verifica se linha termina com quebra de linha
+            now = dateTime.now()
+            horaAtual = now.strftime("%d/%m%Y  %H:%M:%S")
+            novoSocketDaConexao.send(linha.encode("UTF-8")) //para enviar um byte para o socket com o método send:
+            novoSocketDaConexao.send(linha.encode("UTF-8"))
+            print(linha) //neste caso vai enviar a mesma linha que foi digitada
+            linha = ""
+            break // finaliza o laço quando o usuário der um enter, parando de receber os dados
+
+    novoSocketDaConexao.close() //fecha a conexão
+
+    //Lógica do programa:
+
+        // novoSocketDaConexao, enderecoDoCliente = socketTCP.accept()  => aceita conexão que recebe os dados
+        //no primeiro while entra no laço que recebe os dados e os acumula na variável linha
+        //manda a linha de volta para o cliente e a hora atual quando for pressionada a tecla enter
+        //printa a linha no console e sai do laço
+        //fecha a conexão e volta para cima, aguardando uma nova conexão, se tiver algum cliente esperando a conexão, aceita e entra novamente no laço
+
+    //Ao final da conexão o Telnet informa que o servidor finalizou a conexão
+
+
+
+    //Quantos clientes simultâneos este servidor consegue atender?
+        // só vai aceitar um, porque na hora do accept, retorna o novo socket e retorna os dados deste novo socket, até que a conexão seja encerrada, o fluxo é: aceita -> trabalha -> fecha
+        //ou seja, só vai aceitar uma conexão por vez. Para que haja mais de uma comunicação simultânea tem que usar Multithreads, onde cada uma é dedicada a um determinado cliente.
+        
+        // Como confirmar se está atendendo somente um cliente?
+            //abre uma conexão Telnet e tenta abrir outra novamente, esta segunda vai ser criada, mas não vai estabelecer conexão, enquanto a primeira vai, e seguirá todo o fluxo do programa.
+            //a segunda conexão é ouvida(por causa do método listen()), mas ainda não foi aceita, somente quando finaliza a primeira conexão, e assim sucessivamente...
+            
+            //No método listen() é possível especificar no parametro a quantidade de conexões que podem ser ouvidas(antes de serem aceitas e executadas)
+
+            
+
+
