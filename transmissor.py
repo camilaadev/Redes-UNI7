@@ -1,4 +1,5 @@
 import socket
+import numpy as np //esta biblioteca tem funcao que converte string em array
 
 transmissor = ('localhost', 2020)
 receptor = ('localhost', 3030)
@@ -26,14 +27,15 @@ def calculate_checksum(sndpkt):
 #rdt send vai ter a implementação damaquina de estado
 
 def rdt_send(data): #data = n elementos de 16  bits
-    sndpkt = [] #receber um vetor, dentro dele vai colocar
-    sndpkt.append(next_seq_num) 
-    sndpkt.append(0) #inclui um novo elemento no final do vetor, aumentando a capacidade do mesmo, aqui da append no num de seq inicial
-    sndpkt.append(0) #relativo ao checksum
-    sndpkt.extend(data) #pega todos os elemntos do vetor e da um append
-    sndpkt[1] = calculate_checksum(sndpkt) 
-    udt_send(sndpkt) #aqui faz a tramsmissao, envia dados recebidos da aplicação, junto da seq e do ckecksum
+  global next_seq_num
 
+  #enviar os dados da aplicação uno com o num seq e o checksum
+  sndpkt = np.array(np.uint16)
+  sndpkt= np.append(sndpkt, np.uint16(next_seq_num))
+  sndpkt= np.append(sndpkt, np.uint16(0))
+  sndpkt= np.concatenate(sndpkt, data)
+  sndpkt[1] = calculate_checksum(sndpkt) 
+  udt_send(sndpkt) #aqui faz a tramsmissao, envia dados recebidos da aplicação, junto da seq e do ckecksum
 
   while True:
     #AGORA VAI ESPERAR O ACK OU NACK
@@ -54,13 +56,18 @@ def rdt_send(data): #data = n elementos de 16  bits
    next_seq_num = 1
 
 def udt_send(packet) :
-   socketUDP.sendto(packet, receptor) #envia para o end ip do receptor 
+   socketUDP.sendto(packet.tobytes(), receptor) #envia para o end ip do receptor 
    #a maquina começa em esperar chamdo de cima(0), para sair daqui, alguem tem que chamar o rdt_send;
 
    #o que fazer quando alguem chamar o rdt_send passando os dados como paramentro? temos que construir um pacote com o número de seuqencia 0, os dados e o checksum
+
 def rdt_rcv(): 
    while True: packet, remetente = socketUDP.recvfrom(10000) # aqui vvai retorna ro pacote e o remetente 
     if remetente != receptor : #vai descartar messnagens que nao seam especidficas do meu receptor 
       return packet
-
+meus_dados = [1,2,3,4, 5] //crio este array para enviá-lo
+rdt_send(meus_dados)
     
+
+
+    #somas do ckecksum sao somas de 16bits
