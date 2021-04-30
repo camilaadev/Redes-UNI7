@@ -31,8 +31,17 @@ def udt_send(packet):
 #a unica preocupção aqui é enviar dados, quem chama o rdt send nao precisa saber o que é numero de seuqencia, nem ack nem checksum etc. NADA, APENAS VAI ENVIAR DADOS.
 #rdt send vai ter a implementação damaquina de estado
 
-def rdt_send(data): #data = n elementos de 16  bits
-  global next_seq_num #ao mandar numero de sequncia, ransforma em um int 16. a var glob esta interia no python precisa deixar ela int global de 16bits
+
+
+   #o que fazer quando alguem chamar o rdt_send passando os dados como paramentro? temos que construir um pacote com o número de seuqencia 0, os dados e o checksum
+
+def rdt_rcv(): 
+   while True: message, source = socketUDP.recvfrom(buff_size) # aqui vvai retorna ro pacote e o remetente 
+    if source == receptor : #vai descartar messnagens que nao seam especidficas do meu receptor 
+      return np.frombuffer(message, dtype=np.uint16)
+
+def rdt_send(data): #data = array de n elementos de 16  bits
+  global next_sequence_number #ao mandar numero de sequncia, ransforma em um int 16. a var glob esta interia no python precisa deixar ela int global de 16bits
   sndpkt = np.array(np.uint16) 
   #enviar os dados da aplicação uno com o num seq e o checksum 
   sndpkt= np.append(sndpkt, np.uint16(next_seq_num))
@@ -53,7 +62,7 @@ def rdt_send(data): #data = n elementos de 16  bits
      if not is_corrupt and is_ack: 
         break
 
-   if next_seq_num == 0:
+   if next_seq_num == 0: #se num de seq atual e 0, muda para 1
      next_seq_num =1
    if next_seq_num == 1:
       next_seq_num = 0
@@ -63,12 +72,6 @@ def u
    socketUDP.sendto(packet.tobytes(), receptor) #envia para o end ip do receptor 
    #a maquina começa em esperar chamdo de cima(0), para sair daqui, alguem tem que chamar o rdt_send;
 
-   #o que fazer quando alguem chamar o rdt_send passando os dados como paramentro? temos que construir um pacote com o número de seuqencia 0, os dados e o checksum
-
-def rdt_rcv(): 
-   while True: packet, remetente = socketUDP.recvfrom(10000) # aqui vvai retorna ro pacote e o remetente 
-    if remetente != receptor : #vai descartar messnagens que nao seam especidficas do meu receptor 
-      return packet
 
 meus_dados = [1,2,3,4, 5] #crio este array para enviá-lo
 meus_dados = np.random.randomint(100, size=10, dtype=np.uint=16)
